@@ -1,0 +1,20 @@
+{
+  "name": "cep.ppro",
+  "version": "1.0.0",
+  "description": "### This template provides basic setup for a simple CEP panel.",
+  "main": "index.js",
+  "directories": {
+    "lib": "lib"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.17.1",
+    "net": "^1.0.2",
+    "socket.io": "^3.1.1",
+    "socket.io-client": "^3.1.1"
+  }
+}
