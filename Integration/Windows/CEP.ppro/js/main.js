@@ -30,7 +30,7 @@ function generateButtons(){
 		thisButton.innerHTML = thisName;
 		thisButton.setAttribute("class", "scriptButton");
 		//thisButton.setAttribute("id", 1);
-		//thisButton.setAttribute("path", "aaaa");
+		thisButton.setAttribute("path", "aaaa");
 		thisButton.setAttribute("onclick", "buttonClick( '" + value + "' )");
 		buttonHolder.appendChild(thisButton);
 	}
@@ -41,7 +41,7 @@ function buttonClick(buttonElement){
 	var root = 'PRISMROOT'
 	var process = require('child_process');
 	var exec = process.exec;
-	var cmd = 'explorer '+root+'Plugins\\Apps\\Premiere\\'+buttonElement;
+	var cmd = 'explorer '+root+'\\Plugins\\Apps\\Premiere\\'+buttonElement;
 
 	exec(cmd, function(err, stdout, stderr) {
 
