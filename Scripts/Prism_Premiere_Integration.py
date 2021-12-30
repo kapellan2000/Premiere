@@ -63,37 +63,17 @@ class Prism_Premiere_Integration(object):
         try:
             psPaths = []
             if platform.system() == "Windows":
-                key = _winreg.OpenKey(
-                    _winreg.HKEY_LOCAL_MACHINE,
-                    "SOFTWARE\\Adobe\\After Effects",
-                    0,
-                    _winreg.KEY_READ | _winreg.KEY_WOW64_64KEY,
-                )
-                idx = 0
-                while True:
-                    try:
-                        afVersion = _winreg.EnumKey(key, idx)
-                        psKey = _winreg.OpenKey(
-                            _winreg.HKEY_LOCAL_MACHINE,
-                            "SOFTWARE\\Adobe\\After Effects\\" + afVersion,
-                            0,
-                            _winreg.KEY_READ | _winreg.KEY_WOW64_64KEY,
-                        )
-                        path = _winreg.QueryValueEx(psKey, "InstallPath")[0]
-                        path = os.path.normpath(path)
-                        psPaths.append(path.split("\Support Files")[0])
-                        idx += 1
-                    except:
-                        break
+                psPaths = ["C:\Program Files (x86)\Common Files\Adobe\CEP\extensions\\"]
+                afVersion = 0
             elif platform.system() == "Darwin":
                 for foldercont in os.walk("/Applications"):
                     for folder in reversed(sorted(foldercont[1])):
-                        if folder.startswith("Adobe After Effects"):
+                        if folder.startswith("Adobe Premiere Pro"):
                             psPaths.append(os.path.join(foldercont[0], folder))
                             if single:
                                 break
                     break
-
+        
             if single:
                 return psPaths[-1],afVersion if psPaths else None
             else:
@@ -113,9 +93,9 @@ class Prism_Premiere_Integration(object):
                 )
                 return False
 
-            if int(str(installPath)[-4:])< 2019:
-                QMessageBox.warning(self.core.messageParent, "Prism Integration", "Unsupported version. Use Premiere 2019 or higher")
-                return ""
+            #if int(str(installPath)[-4:])< 2019:
+            #    QMessageBox.warning(self.core.messageParent, "Prism Integration", "Unsupported version. Use Premiere 2019 or higher")
+            #    return ""
                 
             integrationBase = os.path.join(
                 os.path.dirname(os.path.dirname(__file__)), "Integration"
@@ -127,45 +107,38 @@ class Prism_Premiere_Integration(object):
                 osName = "Mac"
 
 
+            origLFile = os.path.join(integrationBase,"Windows", "CEP.ppro")
+            scriptdir = os.path.join(installPath)
+            pkgdir = os.path.join(scriptdir,"CEP.ppro")
+            mainServer = os.path.join(installPath,"CEP.ppro","js","main.js")
             
+            if os.path.exists(pkgdir):
+                #os.remove(scriptdir)
+                shutil.rmtree(pkgdir)
 
-            for i in [
-                "Prism.jsx",
+            #shutil.copy2(origLFile, scriptdir)
+            shutil.copytree(origLFile, pkgdir)
+            with open(mainServer, "r") as init:
+                initStr = init.read()
 
-            ]:
-                iconPath = os.path.join(
-                    self.core.prismRoot, "Scripts", "UserInterfacesPrism", i
-                    
+            with open(mainServer, "w") as init:
+                initStr = initStr.replace(
+                    "PRISMROOT",  self.core.prismRoot.replace("/", "\\\\")
                 )
-                origLFile = os.path.join(integrationBase,"Windows", "Prism.jsx")
-                scriptdir = os.path.join(installPath,"Support Files", "Scripts", "ScriptUI Panels", i)
-
-                if os.path.exists(scriptdir):
-                    os.remove(scriptdir)
-
-                shutil.copy2(origLFile, scriptdir)
-                
-                with open(scriptdir, "r") as init:
-                    initStr = init.read()
-
-                with open(scriptdir, "w") as init:
-                    initStr = initStr.replace(
-                        "PRISMROOT",  self.core.prismRoot.replace("/", "\\\\")
-                    )
-                    init.write(initStr)
+                init.write(initStr)
 
 
-                confFile = "Adobe After Effects " + str(self.afVersion) + " Prefs.txt"
-                config = os.path.join(os.environ["appdata"],"Adobe", "After Effects", str(self.afVersion), confFile)
+            #confFile = "Adobe After Effects " + str(self.afVersion) + " Prefs.txt"
+            #config = os.path.join(os.environ["appdata"],"Adobe", "After Effects", str(self.afVersion), confFile)
 
-                with open(config, "r") as initConf:
-                    initStrConf = initConf.read()
+            #with open(config, "r") as initConf:
+            #    initStrConf = initConf.read()
 
-                with open(config, "w") as initConf:
-                    initStrConf = initStrConf.replace(
-                        '"Pref_SCRIPTING_FILE_NETWORK_SECURITY" = "0', '"Pref_SCRIPTING_FILE_NETWORK_SECURITY" = "1'
-                    )
-                    initConf.write(initStrConf)
+            #with open(config, "w") as initConf:
+            #    initStrConf = initStrConf.replace(
+            #        '"Pref_SCRIPTING_FILE_NETWORK_SECURITY" = "0', '"Pref_SCRIPTING_FILE_NETWORK_SECURITY" = "1'
+            #    )
+            #    initConf.write(initStrConf)
 
 
 
@@ -213,7 +186,7 @@ class Prism_Premiere_Integration(object):
     
         try:
         
-            psItem = QTreeWidgetItem(["After Effects"])
+            psItem = QTreeWidgetItem(["Premiere"])
             psItem.setCheckState(0, Qt.Checked)
             pItem.addChild(psItem)
 

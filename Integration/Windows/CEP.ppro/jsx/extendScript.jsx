@@ -1,5 +1,4 @@
 function execute(req){
-	alert(req);
 	try {  
 	   ans = eval(req);
 	}  

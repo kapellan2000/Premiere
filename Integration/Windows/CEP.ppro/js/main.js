@@ -38,7 +38,7 @@ function generateButtons(){
 
 function buttonClick(buttonElement){
 	
-	var root = 'C:\\Prism\\'
+	var root = 'PRISMROOT'
 	var process = require('child_process');
 	var exec = process.exec;
 	var cmd = 'explorer '+root+'Plugins\\Apps\\Premiere\\'+buttonElement;

@@ -1,1 +1,0 @@
-mklink /D "C:\Program Files (x86)\Common Files\Adobe\CEP\extensions\prism" "C:\Prism\Plugins\Apps\Premiere\Integration\CEP-ppro"
