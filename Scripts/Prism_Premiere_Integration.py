@@ -83,6 +83,25 @@ class Prism_Premiere_Integration(object):
 
     def addIntegration(self, installPath):
         try:
+            #Enable debug mode in regedit
+            parentKey = _winreg.OpenKey(_winreg.HKEY_CURRENT_USER,
+                "SOFTWARE\\Adobe")
+            i = 0
+            while True:
+               try:
+                   key = _winreg.EnumKey(parentKey, i)
+                   print (key)
+                   i += 1
+                   if key[:5]=="CSXS.":
+                       key = _winreg.CreateKey(_winreg.HKEY_CURRENT_USER, 'SOFTWARE\\Adobe\\'+key)
+                       _winreg.SetValueEx(key, 'PlayerDebugMode', 0, _winreg.REG_SZ, '1')
+                       _winreg.CloseKey(key)
+
+
+               except WindowsError:
+                   break
+        
+        
             if not os.path.exists(installPath):
                 QMessageBox.warning(
                     self.core.messageParent,
@@ -93,10 +112,6 @@ class Prism_Premiere_Integration(object):
                 )
                 return False
 
-            #if int(str(installPath)[-4:])< 2019:
-            #    QMessageBox.warning(self.core.messageParent, "Prism Integration", "Unsupported version. Use Premiere 2019 or higher")
-            #    return ""
-                
             integrationBase = os.path.join(
                 os.path.dirname(os.path.dirname(__file__)), "Integration"
             )

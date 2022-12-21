@@ -1,3 +1,4 @@
+//Open socket
 (function () {
 	'use strict';
 	themeManager.init();
@@ -18,13 +19,13 @@
 	
 }());
 
+//Generate UI
 function generateButtons(){
 	const object = {'File Save...': 'Save Version.cmd', 'File Save comment...': 'Save Extended.cmd', 'Prism settings' : 'Settings.cmd', 'Project Browser' : 'Project Browser.cmd', 'State Manager' : 'Export.cmd'};
 	var buttonHolder = document.getElementById("buttonHolder");
 	var thisButton;
 	var thisName;
 	for (const [key, value] of Object.entries(object)){
-
 		thisName = key
 		thisButton = document.createElement("BUTTON");
 		thisButton.innerHTML = thisName;
@@ -36,6 +37,7 @@ function generateButtons(){
 	}
 }
 
+// On click function
 function buttonClick(buttonElement){
 	
 	var root = 'PRISMROOT'
@@ -46,7 +48,6 @@ function buttonClick(buttonElement){
 	exec(cmd, function(err, stdout, stderr) {
 
 	});
-
 }
 
 
