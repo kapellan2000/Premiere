@@ -21,7 +21,7 @@
 
 //Generate UI
 function generateButtons(){
-	const object = {'File Save...': 'Save Version.cmd', 'File Save comment...': 'Save Extended.cmd', 'Prism settings' : 'Settings.cmd', 'Project Browser' : 'Project Browser.cmd', 'State Manager' : 'Export.cmd'};
+	const object = {'File Save...': 'Save Version.cmd', 'File Save comment...': 'Save Extended.cmd', 'Prism settings' : 'Settings.cmd', 'Project Browser' : 'Project Browser.cmd', 'Export' : 'Export.cmd'};
 	var buttonHolder = document.getElementById("buttonHolder");
 	var thisButton;
 	var thisName;

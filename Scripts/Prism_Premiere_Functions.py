@@ -477,10 +477,10 @@ class Prism_Premiere_Functions(object):
         curfile = self.core.getCurrentFileName()
         fname = self.core.getScenefileData(curfile)
 
-        if fname["entity"] == "invalid":
+        if fname["filename"] == "invalid":
             entityType = "context"
         else:
-            entityType = fname["entity"]
+            entityType = fname["filename"]
 
         self.dlg_export = QDialog()
         self.core.parentWindow(self.dlg_export)
@@ -647,7 +647,7 @@ class Prism_Premiere_Functions(object):
             pComment = useVersion.split(self.core.filenameSeparator)[1]
 
         fnameData = self.core.getScenefileData(fileName)
-        if fnameData["entity"] == "shot":
+        if fnameData["type"] == "shot":
             outputPath = os.path.abspath(
                 os.path.join(
                     fileName,
@@ -666,15 +666,15 @@ class Prism_Premiere_Functions(object):
             outputFile = os.path.join(
                 "shot"
                 + "_"
-                + fnameData["entityName"]
+                + fnameData["asset_path"]
                 + "_"
                 + self.le_task.text()
                 + "_"
                 + hVersion
                 + extension
             )
-        elif fnameData["entity"] == "asset":
-            base = self.core.getEntityBasePath(fileName)
+        elif fnameData["type"] == "asset":
+            base = self.core.getAssetPath()
             outputPath = os.path.abspath(
                 os.path.join(
                     base,
@@ -684,10 +684,9 @@ class Prism_Premiere_Functions(object):
                 )
             )
             if hVersion == "":
-                hVersion = self.core.getHighestTaskVersion(outputPath)
-
+                hVersion = self.core.getHighestVersion(outputPath)
             outputFile = os.path.join(
-                fnameData["entityName"]
+                fnameData["asset_path"]
                 + "_"
                 + self.le_task.text()
                 + "_"
@@ -752,11 +751,13 @@ class Prism_Premiere_Functions(object):
 
             if not os.path.exists(outputDir):
                 os.makedirs(outputDir)
-
+            details = {
+                "version": hVersion,
+                "sourceScene": self.core.getCurrentFileName(),
+            }
             self.core.saveVersionInfo(
-                location=os.path.dirname(outputPath),
-                version=hVersion,
-                origin=self.core.getCurrentFileName(),
+                filepath=os.path.dirname(outputPath),
+                details=details,
             )
         else:
             startLocation = os.path.join(
