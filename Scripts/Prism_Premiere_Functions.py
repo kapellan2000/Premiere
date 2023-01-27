@@ -347,12 +347,20 @@ class Prism_Premiere_Functions(object):
 
     @err_catcher(name=__name__)
     def PremiereImportSource(self, origin):
+        sourceData = origin.compGetImportSource()
+        print(sourceData)
+        print(sourceData[0])
 
-        mpb = origin.mediaPlaybacks["shots"]
-        sourceFolder = os.path.dirname(os.path.join(mpb["basePath"], mpb["seq"][0])).replace("\\", "/")
-        sourceFolder = os.path.join(mpb["basePath"], mpb["seq"][0]).replace("\\", "/")
+        #filePath = os.path.dirname(sourceData[0][0])
+        filePath = sourceData[0][0]
+        #firstFrame = i[1]
+        #lastFrame = i[2]
+        print(filePath)
+        #mpb = origin.mediaPlaybacks["shots"]
+        #sourceFolder = os.path.dirname(os.path.join(mpb["basePath"], mpb["seq"][0])).replace("\\", "/")
+        #sourceFolder = os.path.join(mpb["basePath"], mpb["seq"][0]).replace("\\", "/")
         try:
-                scpt ="app.project.importFiles('" + sourceFolder + "', 0,app.project.getInsertionBin(),1);"
+                scpt ="app.project.importFiles('" + filePath + "', 0,app.project.getInsertionBin(),1);"
                 name = self.executeAppleScript(scpt)
                 if name is None:
                     raise
@@ -655,18 +663,19 @@ class Prism_Premiere_Functions(object):
                     os.pardir,
                     os.pardir,
                     os.pardir,
-                    "Rendering",
+                    "Renders",
                     "2dRender",
                     self.le_task.text(),
                 )
             )
             if hVersion == "":
-                hVersion = self.core.getHighestTaskVersion(outputPath)
-
+                hVersion = self.core.getHighestVersion(outputPath)
+                if hVersion == None:
+                    hVersion = fnameData["version"]
             outputFile = os.path.join(
                 "shot"
                 + "_"
-                + fnameData["asset_path"]
+                + fnameData["shot"]
                 + "_"
                 + self.le_task.text()
                 + "_"
@@ -678,7 +687,7 @@ class Prism_Premiere_Functions(object):
             outputPath = os.path.abspath(
                 os.path.join(
                     base,
-                    "Rendering",
+                    "Renders",
                     "2dRender",
                     self.le_task.text(),
                 )
