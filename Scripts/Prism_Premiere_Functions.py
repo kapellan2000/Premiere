@@ -66,14 +66,11 @@ class Prism_Premiere_Functions(object):
     @err_catcher(name=__name__)
     def startup(self, origin):
         origin.timer.stop()
-
+        root = os.path.dirname(self.pluginPath).replace("\\", "/").split("Scripts")[0]
         with (
             open(
                 os.path.join(
-                    self.core.prismRoot,
-                    "Plugins",
-                    "Apps",
-                    "Premiere",
+                    root,
                     "UserInterfaces",
                     "PremiereStyleSheet",
                     "Premiere.qss",
@@ -86,10 +83,7 @@ class Prism_Premiere_Functions(object):
         ssheet = ssheet.replace(
             "qss:",
             os.path.join(
-                self.core.prismRoot,
-                "Plugins",
-                "Apps",
-                "Premiere",
+                root,
                 "UserInterfaces",
                 "PremiereStyleSheet",
             ).replace("\\", "/")
