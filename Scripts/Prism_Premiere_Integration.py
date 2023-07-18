@@ -116,10 +116,6 @@ class Prism_Premiere_Integration(object):
                 os.path.dirname(os.path.dirname(__file__)), "Integration"
             )
 
-            if platform.system() == "Windows":
-                osName = "Windows"
-            elif platform.system() == "Darwin":
-                osName = "Mac"
 
             cmds = []
             origLFile = os.path.join(integrationBase,"Windows", "prism.ppro")

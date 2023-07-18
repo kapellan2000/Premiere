@@ -33,7 +33,7 @@ import os
 
 class Prism_Premiere_Variables(object):
     def __init__(self, core, plugin):
-        self.version = "v2.0.0.beta12"
+        self.version = "v2.0.0.beta17.3"
         self.pluginName = "Premiere"
         self.pluginType = "App"
         self.appShortName = "Premiere"
