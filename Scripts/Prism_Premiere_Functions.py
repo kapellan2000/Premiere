@@ -66,14 +66,11 @@ class Prism_Premiere_Functions(object):
     @err_catcher(name=__name__)
     def startup(self, origin):
         origin.timer.stop()
-
+        root = os.path.dirname(self.pluginPath).replace("\\", "/").split("Scripts")[0]
         with (
             open(
                 os.path.join(
-                    self.core.prismRoot,
-                    "Plugins",
-                    "Apps",
-                    "Premiere",
+                    root,
                     "UserInterfaces",
                     "PremiereStyleSheet",
                     "Premiere.qss",
@@ -86,10 +83,7 @@ class Prism_Premiere_Functions(object):
         ssheet = ssheet.replace(
             "qss:",
             os.path.join(
-                self.core.prismRoot,
-                "Plugins",
-                "Apps",
-                "Premiere",
+                root,
                 "UserInterfaces",
                 "PremiereStyleSheet",
             ).replace("\\", "/")
@@ -347,12 +341,20 @@ class Prism_Premiere_Functions(object):
 
     @err_catcher(name=__name__)
     def PremiereImportSource(self, origin):
+        sourceData = origin.compGetImportSource()
+        print(sourceData)
+        print(sourceData[0])
 
-        mpb = origin.mediaPlaybacks["shots"]
-        sourceFolder = os.path.dirname(os.path.join(mpb["basePath"], mpb["seq"][0])).replace("\\", "/")
-        sourceFolder = os.path.join(mpb["basePath"], mpb["seq"][0]).replace("\\", "/")
+        #filePath = os.path.dirname(sourceData[0][0])
+        filePath = sourceData[0][0]
+        #firstFrame = i[1]
+        #lastFrame = i[2]
+        print(filePath)
+        #mpb = origin.mediaPlaybacks["shots"]
+        #sourceFolder = os.path.dirname(os.path.join(mpb["basePath"], mpb["seq"][0])).replace("\\", "/")
+        #sourceFolder = os.path.join(mpb["basePath"], mpb["seq"][0]).replace("\\", "/")
         try:
-                scpt ="app.project.importFiles('" + sourceFolder + "', 0,app.project.getInsertionBin(),1);"
+                scpt ="app.project.importFiles('" + filePath + "', 0,app.project.getInsertionBin(),1);"
                 name = self.executeAppleScript(scpt)
                 if name is None:
                     raise
@@ -477,10 +479,10 @@ class Prism_Premiere_Functions(object):
         curfile = self.core.getCurrentFileName()
         fname = self.core.getScenefileData(curfile)
 
-        if fname["entity"] == "invalid":
+        if fname["filename"] == "invalid":
             entityType = "context"
         else:
-            entityType = fname["entity"]
+            entityType = fname["filename"]
 
         self.dlg_export = QDialog()
         self.core.parentWindow(self.dlg_export)
@@ -647,7 +649,7 @@ class Prism_Premiere_Functions(object):
             pComment = useVersion.split(self.core.filenameSeparator)[1]
 
         fnameData = self.core.getScenefileData(fileName)
-        if fnameData["entity"] == "shot":
+        if fnameData["type"] == "shot":
             outputPath = os.path.abspath(
                 os.path.join(
                     fileName,
@@ -655,39 +657,39 @@ class Prism_Premiere_Functions(object):
                     os.pardir,
                     os.pardir,
                     os.pardir,
-                    "Rendering",
+                    "Renders",
                     "2dRender",
                     self.le_task.text(),
                 )
             )
             if hVersion == "":
-                hVersion = self.core.getHighestTaskVersion(outputPath)
-
+                hVersion = self.core.getHighestVersion(outputPath)
+                if hVersion == None:
+                    hVersion = fnameData["version"]
             outputFile = os.path.join(
                 "shot"
                 + "_"
-                + fnameData["entityName"]
+                + fnameData["shot"]
                 + "_"
                 + self.le_task.text()
                 + "_"
                 + hVersion
                 + extension
             )
-        elif fnameData["entity"] == "asset":
-            base = self.core.getEntityBasePath(fileName)
+        elif fnameData["type"] == "asset":
+            base = self.core.getAssetPath()
             outputPath = os.path.abspath(
                 os.path.join(
                     base,
-                    "Rendering",
+                    "Renders",
                     "2dRender",
                     self.le_task.text(),
                 )
             )
             if hVersion == "":
-                hVersion = self.core.getHighestTaskVersion(outputPath)
-
+                hVersion = self.core.getHighestVersion(outputPath)
             outputFile = os.path.join(
-                fnameData["entityName"]
+                fnameData["asset_path"]
                 + "_"
                 + self.le_task.text()
                 + "_"
@@ -752,11 +754,13 @@ class Prism_Premiere_Functions(object):
 
             if not os.path.exists(outputDir):
                 os.makedirs(outputDir)
-
+            details = {
+                "version": hVersion,
+                "sourceScene": self.core.getCurrentFileName(),
+            }
             self.core.saveVersionInfo(
-                location=os.path.dirname(outputPath),
-                version=hVersion,
-                origin=self.core.getCurrentFileName(),
+                filepath=os.path.dirname(outputPath),
+                details=details,
             )
         else:
             startLocation = os.path.join(

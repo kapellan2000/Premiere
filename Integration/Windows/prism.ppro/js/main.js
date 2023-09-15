@@ -21,7 +21,7 @@
 
 //Generate UI
 function generateButtons(){
-	const object = {'File Save...': 'Save Version.cmd', 'File Save comment...': 'Save Extended.cmd', 'Prism settings' : 'Settings.cmd', 'Project Browser' : 'Project Browser.cmd', 'Export' : 'Export.cmd'};
+	const object = {'File Save...': 'SaveVersion', 'File Save comment...': 'SaveComment', 'Prism settings' : 'Settings', 'Project Browser' : 'ProjectBrowser', 'Export' : 'Export'};
 	var buttonHolder = document.getElementById("buttonHolder");
 	var thisButton;
 	var thisName;
@@ -38,19 +38,15 @@ function generateButtons(){
 }
 
 // On click function
-function buttonClick(buttonElement){
-	
-	var root = 'PRISMROOT'
-	var process = require('child_process');
-	var exec = process.exec;
-	var cmd = 'explorer '+root+'\\Plugins\\Apps\\Premiere\\'+buttonElement;
+function buttonClick(argumentValue){
+	var pythonExePath = "C:/Program Files/Prism2/Python39/python.exe";
+	var scriptPath = "c:/ProgramData/Prism2/plugins/Premiere/Scripts/Prism_Premiere_MenuTools.py";
+	var command = '"' + pythonExePath + '" "' + scriptPath + '" "' + argumentValue + '"';
+	var exec = require('child_process').exec;
+	exec(command)
 
-	exec(cmd, function(err, stdout, stderr) {
-
-	});
+		
 }
-
-
 
 
 

@@ -83,6 +83,25 @@ class Prism_Premiere_Integration(object):
 
     def addIntegration(self, installPath):
         try:
+            #Enable debug mode in regedit
+            parentKey = _winreg.OpenKey(_winreg.HKEY_CURRENT_USER,
+                "SOFTWARE\\Adobe")
+            i = 0
+            while True:
+               try:
+                   key = _winreg.EnumKey(parentKey, i)
+                   print (key)
+                   i += 1
+                   if key[:5]=="CSXS.":
+                       key = _winreg.CreateKey(_winreg.HKEY_CURRENT_USER, 'SOFTWARE\\Adobe\\'+key)
+                       _winreg.SetValueEx(key, 'PlayerDebugMode', 0, _winreg.REG_SZ, '1')
+                       _winreg.CloseKey(key)
+
+
+               except WindowsError:
+                   break
+        
+        
             if not os.path.exists(installPath):
                 QMessageBox.warning(
                     self.core.messageParent,
@@ -93,59 +112,72 @@ class Prism_Premiere_Integration(object):
                 )
                 return False
 
-            #if int(str(installPath)[-4:])< 2019:
-            #    QMessageBox.warning(self.core.messageParent, "Prism Integration", "Unsupported version. Use Premiere 2019 or higher")
-            #    return ""
-                
             integrationBase = os.path.join(
                 os.path.dirname(os.path.dirname(__file__)), "Integration"
             )
 
-            if platform.system() == "Windows":
-                osName = "Windows"
-            elif platform.system() == "Darwin":
-                osName = "Mac"
 
-
-            origLFile = os.path.join(integrationBase,"Windows", "CEP.ppro")
-            scriptdir = os.path.join(installPath)
-            pkgdir = os.path.join(scriptdir,"CEP.ppro")
-            mainServer = os.path.join(installPath,"CEP.ppro","js","main.js")
+            cmds = []
+            origLFile = os.path.join(integrationBase,"Windows", "prism.ppro")
+            scriptdir = os.path.join(installPath, "prism.ppro")
+            d_css = os.path.join(scriptdir,"css")
+            d_csxs = os.path.join(scriptdir,"CSXS")
+            d_js = os.path.join(scriptdir,"js")
+            d_libs = os.path.join(scriptdir,"js","libs")
             
-            if os.path.exists(pkgdir):
+            if os.path.exists(scriptdir):
+                cmd = {
+                        "type": "removeFile",
+                        "args": [scriptdir],
+                        "validate": False,
+                    }
+                cmds.append(cmd) 
+            for i in [scriptdir,d_css,d_csxs,d_js,d_libs]:
+                cmd = {"type": "createFolder", "args": [i]}
+                cmds.append(cmd)
+            source = os.path.join(origLFile,"index.html")    
+            cmd = {"type": "copyFile", "args": [source, scriptdir]}
+            cmds.append(cmd)   
+            
+            source = os.path.join(origLFile,"css","style.css")
+            cmd = {"type": "copyFile", "args": [source, d_css]}
+            cmds.append(cmd)
+            
+            source = os.path.join(origLFile,"CSXS","manifest.xml")
+            cmd = {"type": "copyFile", "args": [source, d_csxs]}
+            cmds.append(cmd)
+            
+            source = os.path.join(origLFile,"js","main.js")
+            cmd = {"type": "copyFile", "args": [source, d_js]}
+            cmds.append(cmd)
+            
+            source = os.path.join(origLFile,"js","themeManager.js")
+            cmd = {"type": "copyFile", "args": [source, d_js]}
+            cmds.append(cmd)    
+            
+            source = os.path.join(origLFile,"js","libs","CSInterface.js")
+            cmd = {"type": "copyFile", "args": [source, d_libs]}
+            cmds.append(cmd)                 
+            #pkgdir = os.path.join(scriptdir,"CEP.ppro")
+            #mainServer = os.path.join(installPath,"CEP.ppro","js","main.js")
+            
+            #if os.path.exists(pkgdir):
                 #os.remove(scriptdir)
-                shutil.rmtree(pkgdir)
+            #    shutil.rmtree(pkgdir)
 
             #shutil.copy2(origLFile, scriptdir)
-            shutil.copytree(origLFile, pkgdir)
-            with open(mainServer, "r") as init:
-                initStr = init.read()
+            #shutil.copytree(origLFile, pkgdir)
+            #with open(mainServer, "r") as init:
+            #    initStr = init.read()
 
-            with open(mainServer, "w") as init:
-                initStr = initStr.replace(
-                    "PRISMROOT",  self.core.prismRoot.replace("/", "\\\\")
-                )
-                init.write(initStr)
-
-
-            #confFile = "Adobe After Effects " + str(self.afVersion) + " Prefs.txt"
-            #config = os.path.join(os.environ["appdata"],"Adobe", "After Effects", str(self.afVersion), confFile)
-
-            #with open(config, "r") as initConf:
-            #    initStrConf = initConf.read()
-
-            #with open(config, "w") as initConf:
-            #    initStrConf = initStrConf.replace(
-            #        '"Pref_SCRIPTING_FILE_NETWORK_SECURITY" = "0', '"Pref_SCRIPTING_FILE_NETWORK_SECURITY" = "1'
+            #with open(mainServer, "w") as init:
+            #    initStr = initStr.replace(
+            #        "PRISMROOT",  self.core.prismRoot.replace("/", "\\\\")
             #    )
-            #    initConf.write(initStrConf)
+            #    init.write(initStr)
 
-
-
-
-
-            #if result is True:
-            return True
+            result = self.core.runFileCommands(cmds)
+            return result
             #else:
             #    raise Exception(result)
 
