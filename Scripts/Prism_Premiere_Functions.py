@@ -37,13 +37,16 @@ import platform
 import subprocess
 import socket
 
-try:
-    from PySide2.QtCore import *
-    from PySide2.QtGui import *
-    from PySide2.QtWidgets import *
-except:
-    from PySide.QtCore import *
-    from PySide.QtGui import *
+from qtpy.QtCore import *
+from qtpy.QtGui import *
+from qtpy.QtWidgets import *
+# try:
+    # from PySide2.QtCore import *
+    # from PySide2.QtGui import *
+    # from PySide2.QtWidgets import *
+# except:
+    # from PySide.QtCore import *
+    # from PySide.QtGui import *
 
 if platform.system() == "Windows":
     import win32com.client
