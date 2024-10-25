@@ -19,32 +19,76 @@
 	
 }());
 
+var debug = 0;
 //Generate UI
+
 function generateButtons(){
-	const object = {'File Save...': 'SaveVersion', 'File Save comment...': 'SaveComment', 'Prism settings' : 'Settings', 'Project Browser' : 'ProjectBrowser', 'Export' : 'Export'};
+	
+
+	let object;
+	if (debug === 1) {
+		object = {
+			'File Save...': 'Save Version.cmd',
+			'File Save comment...': 'Save Extended.cmd',
+			'Prism settings': 'Settings.cmd',
+			'Project Browser': 'Project Browser.cmd',
+			'Export': 'Export.cmd'
+		};
+	} else {
+		object = {
+			'File Save...': 'SaveVersion',
+			'File Save comment...': 'SaveComment',
+			'Prism settings': 'Settings',
+			'Project Browser': 'ProjectBrowser',
+			'Export': 'Export'
+		};
+	}
+	
+
 	var buttonHolder = document.getElementById("buttonHolder");
 	var thisButton;
 	var thisName;
 	for (const [key, value] of Object.entries(object)){
+
 		thisName = key
 		thisButton = document.createElement("BUTTON");
+		thisButton.style.color = "#8a8a8a";
+		thisButton.style.background = "#232323";
+		thisButton.style.width = '200px';
+		thisButton.style.marginTop = "2px";
 		thisButton.innerHTML = thisName;
 		thisButton.setAttribute("class", "scriptButton");
-		//thisButton.setAttribute("id", 1);
-		thisButton.setAttribute("path", "aaaa");
+		thisButton.setAttribute("path", "A");
 		thisButton.setAttribute("onclick", "buttonClick( '" + value + "' )");
 		buttonHolder.appendChild(thisButton);
+		var br = document.createElement("br");
+		buttonHolder.appendChild(br);
+
+
 	}
 }
 
-// On click function
-function buttonClick(argumentValue){
-	var pythonExePath = "C:/Program Files/Prism2/Python39/python.exe";
-	var scriptPath = "c:/ProgramData/Prism2/plugins/Premiere/Scripts/Prism_Premiere_MenuTools.py";
-	var command = '"' + pythonExePath + '" "' + scriptPath + '" "' + argumentValue + '"';
-	var exec = require('child_process').exec;
-	exec(command)
 
+function buttonClick(argumentValue){
+
+	if (debug === 1) {
+		
+		var root = 'C:\\ProgramData\\Prism2'
+		var process = require('child_process');
+		var exec = process.exec;
+		var cmd = 'explorer '+root+'\\plugins\\Premiere\\Integration\\dev\\'+argumentValue;
+
+		exec(cmd, function(err, stdout, stderr) {
+		});
+			
+		
+	} else {
+		var pythonExePath = "C:/Program Files/Prism2/Python311/python.exe";
+		var scriptPath = "c:/ProgramData/Prism2/plugins/Premiere/Scripts/Prism_Premiere_MenuTools.py";
+		var command = '"' + pythonExePath + '" "' + scriptPath + '" "' + argumentValue + '"';
+		var exec = require('child_process').exec;
+		exec(command)
+	}
 		
 }
 
