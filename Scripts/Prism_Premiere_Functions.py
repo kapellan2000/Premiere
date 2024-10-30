@@ -160,12 +160,12 @@ class Prism_Premiere_Functions(object):
     def executeAppleScript(self, script):
         HOST = '127.0.0.1'
         PORT = 9889
-        print(script)
+        #print(script)
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             s.connect((HOST, PORT))
             #filepath = "teste"
             #scpt = "app.project.path;"
-            #scpt = "alert('" + filepath + "');"
+            #script = "alert('" + filepath + "');"
             data = (script).encode("utf-8")
             s.sendall(data)
             data = s.recv(1024)
@@ -473,6 +473,7 @@ class Prism_Premiere_Functions(object):
 
     @err_catcher(name=__name__)
     def exportImage(self):
+
         if not self.core.projects.ensureProject():
             return False
 
