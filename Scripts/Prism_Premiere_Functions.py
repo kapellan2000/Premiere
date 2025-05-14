@@ -160,7 +160,7 @@ class Prism_Premiere_Functions(object):
     def executeAppleScript(self, script):
         HOST = '127.0.0.1'
         PORT = 9889
-        #print(script)
+
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             s.connect((HOST, PORT))
             #filepath = "teste"
@@ -177,6 +177,9 @@ class Prism_Premiere_Functions(object):
         try:
             scpt = "app.project.path;" #fsName name
             currentFileName = str(self.executeAppleScript(scpt).decode("utf-8"))
+
+            if "Result: " in currentFileName:
+                currentFileName = currentFileName.split("Result: ")[1]
             if path:
                 return currentFileName
             else:
@@ -322,43 +325,76 @@ class Prism_Premiere_Functions(object):
         btn.setPalette(origin.oldPalette)
 
     @err_catcher(name=__name__)
-    def importImages(self, origin):
-        fString = "Please select an import option:"
-        msg = QMessageBox(
-            QMessageBox.NoIcon, "Premiere Import", fString, QMessageBox.Cancel
-        )
-        msg.addButton("Current pass", QMessageBox.YesRole)
-        #   msg.addButton("All passes", QMessageBox.YesRole)
-        #   msg.addButton("Layout all passes", QMessageBox.YesRole)
-        self.core.parentWindow(msg)
-        action = msg.exec_()
+    def importImages(self, filepath=None, mediaBrowser=None, parent=None):
+        if mediaBrowser:
+            self.PremiereImportSource(mediaBrowser)
+        elif filepath:
+            self.PremiereImportSource(filepath=filepath)
+            
+        # fString = "Please select an import option:"
+        # msg = QMessageBox(
+            # QMessageBox.NoIcon, "Premiere Import", fString, QMessageBox.Cancel
+        # )
+        # msg.addButton("Current pass", QMessageBox.YesRole)
+          # msg.addButton("All passes", QMessageBox.YesRole)
+          # msg.addButton("Layout all passes", QMessageBox.YesRole)
+        # self.core.parentWindow(msg)
+        # action = msg.exec_()
 
-        if action == 0:
-            self.PremiereImportSource(origin)
+        # if action == 0:
+            # self.PremiereImportSource(origin)
         #   elif action == 1:
         #       self.PremiereImportPasses(origin)
         #   elif action == 2:
         #       self.PremiereLayout(origin)
-        else:
-            return
+        # else:
+            # return
 
     @err_catcher(name=__name__)
-    def PremiereImportSource(self, origin):
-        sourceData = origin.compGetImportSource()
-        print(sourceData)
-        print(sourceData[0])
+    def PremiereImportSource(self, origin, filepath=None):
+        if not filepath:
+            filepath = origin.seq[origin.getCurrentFrame()].replace("\\", "/")
+        #self.openScene(origin, filepath, force=True)
+        
+        #sourceData = origin.compGetImportSource()
+        
+        #print(sourceData)
+        #print(sourceData[0])
 
         #filePath = os.path.dirname(sourceData[0][0])
-        filePath = sourceData[0][0]
+        #filePath = sourceData[0][0]
         #firstFrame = i[1]
         #lastFrame = i[2]
-        print(filePath)
+        #print(filePath)
         #mpb = origin.mediaPlaybacks["shots"]
         #sourceFolder = os.path.dirname(os.path.join(mpb["basePath"], mpb["seq"][0])).replace("\\", "/")
         #sourceFolder = os.path.join(mpb["basePath"], mpb["seq"][0]).replace("\\", "/")
         try:
-                scpt ="app.project.importFiles('" + filePath + "', 0,app.project.getInsertionBin(),1);"
+            
+                scpt = """
+                    // Указываем путь к файлу
+                    var filePath = '""" + filepath + """';
+
+                    // Получаем доступ к проекту
+                    var project = app.project;
+
+                    // Проверяем, существует ли файл
+                    var file = new File(filePath);
+                    if (file.exists) {
+                        // Импортируем файл в проект
+                        app.project.importFiles([filePath], true);
+                        
+                    }
+
+                    """
+
+
+                # Выполнение команды через executeAppleScript
                 name = self.executeAppleScript(scpt)
+                
+            
+                #scpt ="app.project.importFiles('" + filePath + "', 0,app.project.getInsertionBin(),1);"
+                #name = self.executeAppleScript(scpt)
                 if name is None:
                     raise
         except:
@@ -482,7 +518,6 @@ class Prism_Premiere_Functions(object):
 
         curfile = self.core.getCurrentFileName()
         fname = self.core.getScenefileData(curfile)
-
         if fname["filename"] == "invalid":
             entityType = "context"
         else:
@@ -509,6 +544,8 @@ class Prism_Premiere_Functions(object):
         l_task = QLabel("Task:")
         l_task.setMinimumWidth(110)
         self.le_task = QLineEdit()
+        self.le_task.setText(fname.get("task", ""))
+
         self.b_task = QPushButton(u"▼")
         self.b_task.setMinimumSize(35, 0)
         self.b_task.setMaximumSize(35, 500)
@@ -589,7 +626,7 @@ class Prism_Premiere_Functions(object):
     @err_catcher(name=__name__)
     def exportGetTasks(self):
         self.taskList = self.core.getTaskNames("2d")
-
+        
         if len(self.taskList) == 0:
             self.b_task.setHidden(True)
         else:
@@ -600,7 +637,7 @@ class Prism_Premiere_Functions(object):
     def exportShowTasks(self):
         tmenu = QMenu(self.dlg_export)
 
-        for i in self.taskList:
+        for i in sorted(self.taskList, key=lambda x: x.lower()):
             tAct = QAction(i, self.dlg_export)
             tAct.triggered.connect(lambda x=None, t=i: self.le_task.setText(t))
             tAct.triggered.connect(self.exportGetVersions)
@@ -610,6 +647,7 @@ class Prism_Premiere_Functions(object):
 
     @err_catcher(name=__name__)
     def exportGetVersions(self):
+        
         existingVersions = []
         outData = self.exportGetOutputName()
         if outData is not None:
@@ -617,6 +655,7 @@ class Prism_Premiere_Functions(object):
 
             if os.path.exists(versionDir):
                 for i in reversed(sorted(os.listdir(versionDir))):
+
                     if len(i) < 5 or not i.startswith("v"):
                         continue
 
@@ -631,85 +670,116 @@ class Prism_Premiere_Functions(object):
 
         self.cb_versions.clear()
         self.cb_versions.addItems(existingVersions)
-
+        
     @err_catcher(name=__name__)
     def exportGetOutputName(self, useVersion="next"):
         if self.le_task.text() == "":
             return
 
+        task = self.le_task.text()
         extension = self.cb_formats.currentText()
         fileName = self.core.getCurrentFileName()
-
-        if self.core.useLocalFiles:
-            if self.chb_localOutput.isChecked():
-                fileName = self.core.convertPath(fileName, target="local")
-            else:
-                fileName = self.core.convertPath(fileName, target="global")
-
-        hVersion = ""
-        pComment = self.le_comment.text()
-        if useVersion != "next":
-            hVersion = useVersion.split(self.core.filenameSeparator)[0]
-            pComment = useVersion.split(self.core.filenameSeparator)[1]
-
         fnameData = self.core.getScenefileData(fileName)
-        if fnameData["type"] == "shot":
-            outputPath = os.path.abspath(
-                os.path.join(
-                    fileName,
-                    os.pardir,
-                    os.pardir,
-                    os.pardir,
-                    os.pardir,
-                    "Renders",
-                    "2dRender",
-                    self.le_task.text(),
-                )
-            )
-            if hVersion == "":
-                hVersion = self.core.getHighestVersion(outputPath)
-                if hVersion == None:
-                    hVersion = fnameData["version"]
-            outputFile = os.path.join(
-                "shot"
-                + "_"
-                + fnameData["shot"]
-                + "_"
-                + self.le_task.text()
-                + "_"
-                + hVersion
-                + extension
-            )
-        elif fnameData["type"] == "asset":
-            base = self.core.getAssetPath()
-            outputPath = os.path.abspath(
-                os.path.join(
-                    base,
-                    "Renders",
-                    "2dRender",
-                    self.le_task.text(),
-                )
-            )
-            if hVersion == "":
-                hVersion = self.core.getHighestVersion(outputPath)
-            outputFile = os.path.join(
-                fnameData["asset_path"]
-                + "_"
-                + self.le_task.text()
-                + "_"
-                + hVersion
-                + extension
-            )
-        else:
+        if "type" not in fnameData:
             return
 
-        outputPath = os.path.join(outputPath, hVersion)
-        if pComment != "":
-            outputPath += "_" + pComment
+        #location = self.cb_location.currentText()
+        location = "global"
+        outputPathData = self.core.mediaProducts.generateMediaProductPath(
+            entity=fnameData,
+            task=task,
+            extension=extension,
+            comment=fnameData.get("comment", ""),
+            framePadding="",
+            version=useVersion if useVersion != "next" else None,
+            location=location,
+            returnDetails=True,
+            mediaType="2drenders",
+        )
 
-        outputName = os.path.join(outputPath, outputFile)
+        outputFolder = os.path.dirname(outputPathData["path"])
+        hVersion = outputPathData["version"]
 
-        return outputName, outputPath, hVersion
+        return outputPathData["path"], outputFolder, hVersion
+    # @err_catcher(name=__name__)
+    # def exportGetOutputName(self, useVersion="next"):
+        # if self.le_task.text() == "":
+            # return
+
+        # extension = self.cb_formats.currentText()
+        # fileName = self.core.getCurrentFileName()
+
+        # if self.core.useLocalFiles:
+            # if self.chb_localOutput.isChecked():
+                # fileName = self.core.convertPath(fileName, target="local")
+            # else:
+                # fileName = self.core.convertPath(fileName, target="global")
+
+        # hVersion = ""
+        # pComment = self.le_comment.text()
+        # if useVersion != "next":
+            # hVersion = useVersion.split(self.core.filenameSeparator)[0]
+            # pComment = useVersion.split(self.core.filenameSeparator)[1]
+
+        # fnameData = self.core.getScenefileData(fileName)
+        # print("fnameData", fnameData)
+        # if fnameData["type"] == "shot":
+            # outputPath = os.path.abspath(
+                # os.path.join(
+                    # fileName,
+                    # os.pardir,
+                    # os.pardir,
+                    # os.pardir,
+                    # os.pardir,
+                    # "Renders",
+                    # "2dRender",
+                    # self.le_task.text(),
+                # )
+            # )
+            # if hVersion == "":
+                # hVersion = self.core.getHighestVersion(outputPath)
+                # if hVersion == None:
+                    # hVersion = fnameData["version"]
+            # outputFile = os.path.join(
+                # "shot"
+                # + "_"
+                # + fnameData["shot"]
+                # + "_"
+                # + self.le_task.text()
+                # + "_"
+                # + hVersion
+                # + extension
+            # )
+        # elif fnameData["type"] == "asset":
+            # base = self.core.getAssetPath()
+            # outputPath = os.path.abspath(
+                # os.path.join(
+                    # base,
+                    # "Renders",
+                    # "2dRender",
+                    # self.le_task.text(),
+                # )
+            # )
+            # if hVersion == "":
+                # hVersion = self.core.getHighestVersion(outputPath)
+            # outputFile = os.path.join(
+                # fnameData["asset_path"]
+                # + "_"
+                # + self.le_task.text()
+                # + "_"
+                # + hVersion
+                # + extension
+            # )
+        # else:
+            # return
+
+        # outputPath = os.path.join(outputPath, hVersion)
+        # if pComment != "":
+            # outputPath += "_" + pComment
+
+        # outputName = os.path.join(outputPath, outputFile)
+
+        # return outputName, outputPath, hVersion
 
     @err_catcher(name=__name__)
     def exportVersionToggled(self, checked):
@@ -731,11 +801,7 @@ class Prism_Premiere_Functions(object):
                 return
 
             if not self.core.fileInPipeline():
-                QMessageBox.warning(
-                    self.core.messageParent,
-                    "Warning",
-                    "The current file is not inside the Pipeline.\nUse the Project Browser to create a file in the Pipeline.",
-                )
+                self.core.showFileNotInProjectWarning(title="Warning")
                 return False
 
             oversion = "next"
@@ -783,7 +849,12 @@ class Prism_Premiere_Functions(object):
                 return
 
         ext = os.path.splitext(outputPath)[1].lower()
+        #C:\ProgramData\Prism2\plugins\Premiere\Integration\presets
+        #scpt = "app.encoder.encodeSequence(app.project.activeSequence,'" + outputPath.replace("\\","//") + "', '" + self.core.prismRoot.replace("/",r"\\\\") + r"\\\\Plugins\\\\Apps\\\\Premiere\\\\Integration\\\\presets\\\\mp4.epr', 0, 0);"
+        scpt = "app.encoder.encodeSequence(app.project.activeSequence,'" + outputPath.replace("\\","//") + "', '" + r"C:\\\\ProgramData\\\\Prism2\\\\plugins\\\\Premiere\\\\Integration\\\\presets\\\\mp4.epr', 0, 0);"
 
-        scpt = "app.encoder.encodeSequence(app.project.activeSequence,'" + outputPath.replace("\\","//") + "', '" + self.core.prismRoot.replace("/",r"\\\\") + r"\\\\Plugins\\\\Apps\\\\Premiere\\\\Integration\\\\presets\\\\mp4.epr', 0, 0);"
+        print(scpt)
         currentFileName = self.executeAppleScript(scpt)
+
+
 

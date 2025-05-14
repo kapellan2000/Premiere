@@ -3,15 +3,13 @@
     themeManager.init();
 
     const net = require('net');
-    const csInterface = new CSInterface(); // Инициализируем CSInterface
-
+    const csInterface = new CSInterface(); 
     const server = net.createServer((socket) => {
         socket.on('data', (data) => {
-            var command = data.toString().trim(); // Преобразуем данные в строку
+            var command = data.toString().trim(); 
 
-            // Выполняем команду в Adobe
             csInterface.evalScript(command, function(result) {
-                socket.write("Result: " + result); // Отправляем результат обратно клиенту
+                socket.write("Result: " + result); 
             });
         });
     });
@@ -24,7 +22,7 @@
     }, 300);
 }());
 
-var debug = 0;
+var debug = 1;
 
 //Generate UI
 function generateButtons(){
